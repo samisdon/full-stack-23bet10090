@@ -1,0 +1,49 @@
+const express = require("express");
+const mongoose = require("mongoose");
+const cors = require("cors");
+
+const app = express();
+app.use(express.json());
+app.use(cors());
+
+// Connect MongoDB
+mongoose.connect("mongodb://localhost:27017/todoDB")
+  .then(() => console.log("MongoDB Connected"))
+  .catch(err => console.log(err));
+
+// Schema
+const todoSchema = new mongoose.Schema({
+  title: String,
+  completed: Boolean
+});
+
+// Model
+const Todo = mongoose.model("Todo", todoSchema);
+
+// CREATE
+app.post("/add", async (req, res) => {
+  const todo = new Todo({ title: req.body.title, completed: false });
+  await todo.save();
+  res.send("Todo Added");
+});
+
+// READ
+app.get("/todos", async (req, res) => {
+  const todos = await Todo.find();
+  res.json(todos);
+});
+
+// UPDATE
+app.put("/update/:id", async (req, res) => {
+  await Todo.findByIdAndUpdate(req.params.id, { completed: req.body.completed });
+  res.send("Todo Updated");
+});
+
+// DELETE
+app.delete("/delete/:id", async (req, res) => {
+  await Todo.findByIdAndDelete(req.params.id);
+  res.send("Todo Deleted");
+});
+
+// Start Server
+app.listen(5000, () => console.log("Server running on port 5000"));
